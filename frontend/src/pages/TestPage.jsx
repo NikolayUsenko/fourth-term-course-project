@@ -1,7 +1,8 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTypingTest } from '../hooks/useTypingTest';
 import TestResultModal from '../components/TestResultModal';
+import Keyboard from '../components/Keyboard';
 import api from '../services/api';
 
 const LANGUAGES = [
@@ -9,6 +10,8 @@ const LANGUAGES = [
   { value: 'ru', label: 'Russian' },
 ];
 const WORD_COUNTS = [10, 25, 50, 100];
+
+const LANG_TO_LAYOUT = { en: 'qwerty', ru: 'jcuken' };
 
 export default function TestPage() {
   const { user } = useAuth();
@@ -26,16 +29,14 @@ export default function TestPage() {
   const inputRef = useRef(null);
   const focusInput = useCallback(() => inputRef.current?.focus(), []);
 
-  // Keep invisible input focused while test is active
   useEffect(() => {
     if (status !== 'finished') focusInput();
   }, [status, focusInput]);
 
-  // Save result to backend when finished (authenticated only)
+  // Save result when finished (authenticated users only)
   useEffect(() => {
     if (status !== 'finished' || !stats || !user) return;
     setSaveError('');
-
     api.post('/results/', {
       language,
       word_count: wordCount,
@@ -47,10 +48,17 @@ export default function TestPage() {
     }).catch(() => setSaveError('Could not save result. Please try again.'));
   }, [status, stats, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleRestart = () => {
-    setSaveError('');
-    restart();
-  };
+  // Next character for keyboard highlight
+  const nextChar = useMemo(() => {
+    if (status !== 'running') return '';
+    const currentWord = words[currentWordIdx] || '';
+    // Highlight space when word is fully typed (waiting for space to submit)
+    return currentInput.length < currentWord.length
+      ? currentWord[currentInput.length]
+      : ' ';
+  }, [status, words, currentWordIdx, currentInput]);
+
+  const handleRestart = () => { setSaveError(''); restart(); };
 
   // Word / character rendering
   const renderChar = (char, idx, typedWord) => {
@@ -64,7 +72,6 @@ export default function TestPage() {
   };
 
   const renderWord = (word, wIdx) => {
-    // Already submitted word
     if (wIdx < currentWordIdx) {
       const typed = typedHistory[wIdx] || '';
       const correct = typed === word;
@@ -85,7 +92,6 @@ export default function TestPage() {
       );
     }
 
-    // Current word being typed
     if (wIdx === currentWordIdx) {
       return (
         <span key={wIdx} className="word word--active">
@@ -99,7 +105,6 @@ export default function TestPage() {
       );
     }
 
-    // Future word
     return (
       <span key={wIdx} className="word">
         {word.split('').map((c, ci) => <span key={ci} className="char">{c}</span>)}
@@ -111,7 +116,6 @@ export default function TestPage() {
     <div className="page">
       {/* Config bar */}
       <div className="test-config">
-        {/* Language selector */}
         <div className="mode-selector">
           {LANGUAGES.map(({ value, label }) => (
             <button
@@ -126,7 +130,6 @@ export default function TestPage() {
 
         <span className="mode-separator">|</span>
 
-        {/* Word count selector */}
         <div className="mode-selector">
           {WORD_COUNTS.map(n => (
             <button
@@ -162,6 +165,12 @@ export default function TestPage() {
       {saveError && (
         <div className="error-message" style={{ marginTop: '1rem' }}>{saveError}</div>
       )}
+
+      {/* Keyboard */}
+      <Keyboard
+        layout={LANG_TO_LAYOUT[language]}
+        highlightChar={nextChar}
+      />
 
       {/* Result modal */}
       {status === 'finished' && stats && (
