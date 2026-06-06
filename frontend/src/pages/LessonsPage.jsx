@@ -3,23 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 
-const LAYOUTS = [
-  { value: 'qwerty', label: 'QWERTY' },
-  { value: 'jcuken', label: 'ЙЦУКЕН' },
+const LANGUAGES = [
+  { value: 'en', label: 'English' },
+  { value: 'ru', label: 'Russian' },
 ];
 
-const fetchLessons = async (layout) => {
-  const res = await api.get(`/lessons/?layout=${layout}&ordering=order`);
-  return res.data.results ?? res.data;
-};
+const fetchLessons = (language) =>
+  api.get(`/lessons/?language=${language}&ordering=order`)
+    .then(r => r.data.results ?? r.data);
 
 export default function LessonsPage() {
-  const [layout, setLayout] = useState('qwerty');
+  const [language, setLanguage] = useState('en');
   const navigate = useNavigate();
 
   const { data: lessons = [], isLoading, isError } = useQuery({
-    queryKey: ['lessons', layout],
-    queryFn: () => fetchLessons(layout),
+    queryKey: ['lessons', language],
+    queryFn: () => fetchLessons(language),
     staleTime: 1000 * 60 * 10,
   });
 
@@ -29,15 +28,15 @@ export default function LessonsPage() {
         Lessons
       </h1>
 
-      {/* Layout tabs */}
+      {/* Language tabs */}
       <div className="lessons-layout-tabs">
-        {LAYOUTS.map(l => (
+        {LANGUAGES.map(({ value, label }) => (
           <button
-            key={l.value}
-            className={'layout-tab' + (layout === l.value ? ' active' : '')}
-            onClick={() => setLayout(l.value)}
+            key={value}
+            className={'layout-tab' + (language === value ? ' active' : '')}
+            onClick={() => setLanguage(value)}
           >
-            {l.label}
+            {label}
           </button>
         ))}
       </div>
@@ -47,7 +46,7 @@ export default function LessonsPage() {
 
       {!isLoading && !isError && (
         lessons.length === 0
-          ? <div className="stats-empty">No lessons yet.</div>
+          ? <div className="stats-empty">No lessons available for this language yet.</div>
           : (
             <div className="lessons-grid">
               {lessons.map((lesson, idx) => (
@@ -55,11 +54,14 @@ export default function LessonsPage() {
                   key={lesson.id}
                   className="lesson-card"
                   onClick={() => navigate(`/lessons/${lesson.id}`)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && navigate(`/lessons/${lesson.id}`)}
                 >
                   <div className="lesson-card__number">Lesson {idx + 1}</div>
                   <div className="lesson-card__title">{lesson.title}</div>
-                  <div className="lesson-card__desc">
-                    {lesson.description || lesson.content.slice(0, 60) + '…'}
+                  <div className="lesson-card__keys">
+                    <span className="lesson-card__combo">{lesson.key_combination}</span>
                   </div>
                 </div>
               ))}
