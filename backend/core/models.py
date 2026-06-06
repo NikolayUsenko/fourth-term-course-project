@@ -4,39 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Lesson(models.Model):
-    """Keyboard training lesson for a specific layout."""
-
-    LAYOUT_QWERTY = 'qwerty'
-    LAYOUT_JCUKEN = 'jcuken'
-    LAYOUT_CHOICES = [
-        (LAYOUT_QWERTY, 'QWERTY'),
-        (LAYOUT_JCUKEN, 'ЙЦУКЕН'),
-    ]
-
-    layout = models.CharField(
-        max_length=10,
-        choices=LAYOUT_CHOICES,
-        verbose_name='Keyboard Layout',
-        db_index=True,
-    )
-    title = models.CharField(max_length=200, verbose_name='Title')
-    description = models.TextField(blank=True, verbose_name='Description')
-    content = models.TextField(verbose_name='Content to Type')
-    order = models.PositiveIntegerField(default=0, db_index=True, verbose_name='Order')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['layout', 'order']
-        verbose_name = 'Lesson'
-        verbose_name_plural = 'Lessons'
-
-    def __str__(self):
-        return f'[{self.get_layout_display()}] {self.title}'
-
-
-class TestResult(models.Model):
-    """Result of a typing speed test for an authenticated user."""
+    """A keyboard training lesson focused on a specific key combination."""
 
     LANG_EN = 'en'
     LANG_RU = 'ru'
@@ -45,15 +13,48 @@ class TestResult(models.Model):
         (LANG_RU, 'Russian'),
     ]
 
-    TYPE_WORDS = 'words'
-    TYPE_TIME = 'time'
-    TEST_TYPE_CHOICES = [
-        (TYPE_WORDS, 'Words'),
-        (TYPE_TIME, 'Time'),
-    ]
+    language = models.CharField(
+        max_length=2,
+        choices=LANGUAGE_CHOICES,
+        verbose_name='Language',
+        db_index=True,
+    )
+    title = models.CharField(max_length=200, verbose_name='Title')
+    key_combination = models.CharField(
+        max_length=50,
+        verbose_name='Key Combination',
+        help_text='e.g. "asdf" for English or "фыва" for Russian',
+    )
+    content = models.TextField(
+        verbose_name='Content',
+        help_text=(
+            'Sequence of words separated by single spaces. '
+            'No punctuation. English: a-z only. Russian: а-я/ё only.'
+        ),
+    )
+    order = models.PositiveIntegerField(default=0, db_index=True, verbose_name='Order')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ['language', 'order']
+        verbose_name = 'Lesson'
+        verbose_name_plural = 'Lessons'
+
+    def __str__(self):
+        return f'[{self.get_language_display()}] {self.title} ({self.key_combination})'
+
+
+class TestResult(models.Model):
+    """Result of a words-based typing test for an authenticated user."""
+
+    LANG_EN = 'en'
+    LANG_RU = 'ru'
+    LANGUAGE_CHOICES = [
+        (LANG_EN, 'English'),
+        (LANG_RU, 'Russian'),
+    ]
     WORD_COUNT_CHOICES = [(10, '10'), (25, '25'), (50, '50'), (100, '100')]
-    TIME_LIMIT_CHOICES = [(15, '15s'), (30, '30s'), (60, '60s'), (120, '120s')]
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -67,23 +68,10 @@ class TestResult(models.Model):
         verbose_name='Language',
         db_index=True,
     )
-    test_type = models.CharField(
-        max_length=10,
-        choices=TEST_TYPE_CHOICES,
-        verbose_name='Test Type',
-        db_index=True,
-    )
     word_count = models.PositiveSmallIntegerField(
-        null=True,
-        blank=True,
         choices=WORD_COUNT_CHOICES,
         verbose_name='Word Count',
-    )
-    time_limit = models.PositiveSmallIntegerField(
-        null=True,
-        blank=True,
-        choices=TIME_LIMIT_CHOICES,
-        verbose_name='Time Limit (s)',
+        db_index=True,
     )
     wpm = models.FloatField(
         verbose_name='WPM',
@@ -110,9 +98,12 @@ class TestResult(models.Model):
         verbose_name = 'Test Result'
         verbose_name_plural = 'Test Results'
         indexes = [
-            models.Index(fields=['user', 'language', 'test_type']),
-            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['user', 'language', 'word_count']),
         ]
 
     def __str__(self):
-        return f'{self.user.username} — {self.language.upper()} {self.wpm:.0f} WPM'
+        return (
+            f'{self.user.username} — '
+            f'{self.get_language_display()} {self.word_count}w '
+            f'{self.wpm:.0f} WPM'
+        )
