@@ -2,20 +2,17 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 
-const fetchStats = async () => {
-  const res = await api.get('/stats/');
-  return res.data;
-};
+const fetchStats = () => api.get('/stats/').then(r => r.data);
 
 const WORD_COLS = [10, 25, 50, 100];
-const TIME_COLS = [15, 30, 60, 120];
 
-function formatTime(seconds) {
-  if (!seconds) return '0s';
-  if (seconds < 60) return `${Math.round(seconds)}s`;
-  const m = Math.floor(seconds / 60);
-  const s = Math.round(seconds % 60);
-  return s > 0 ? `${m}m ${s}s` : `${m}m`;
+/** Format seconds → HH:MM:SS */
+function fmt(totalSeconds) {
+  const s = Math.floor(totalSeconds || 0);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return [h, m, sec].map(v => String(v).padStart(2, '0')).join(':');
 }
 
 export default function StatsPage() {
@@ -31,6 +28,7 @@ export default function StatsPage() {
   if (isError) return <div className="page"><div className="error-message">Failed to load statistics.</div></div>;
 
   const lang = stats?.languages?.[langTab] || {};
+  const dash = <span style={{ color: 'var(--sub)' }}>—</span>;
 
   return (
     <div className="page">
@@ -38,15 +36,15 @@ export default function StatsPage() {
         <h1 className="stats-page__title">My Statistics</h1>
       </div>
 
-      {/* Overview cards */}
+      {/* Overview */}
       <div className="stats-overview">
         <div className="overview-card">
           <div className="overview-card__value">{stats.total_tests}</div>
-          <div className="overview-card__label">Tests</div>
+          <div className="overview-card__label">Tests Completed</div>
         </div>
         <div className="overview-card">
-          <div className="overview-card__value">{formatTime(stats.total_time)}</div>
-          <div className="overview-card__label">Time Typing</div>
+          <div className="overview-card__value">{fmt(stats.total_time)}</div>
+          <div className="overview-card__label">Total Time</div>
         </div>
         <div className="overview-card">
           <div className="overview-card__value">{stats.avg_wpm}</div>
@@ -62,77 +60,48 @@ export default function StatsPage() {
         </div>
       </div>
 
-      {/* Language tabs */}
-      <div className="stats-lang-tabs">
-        {['en', 'ru'].map(l => (
-          <button
-            key={l}
-            className={'layout-tab' + (langTab === l ? ' active' : '')}
-            onClick={() => setLangTab(l)}
-          >
-            {l.toUpperCase()}
-          </button>
-        ))}
-      </div>
-
-      {/* Words table */}
-      <h3 style={{ color: 'var(--sub)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>
-        Words
-      </h3>
-      <table className="stats-table" style={{ marginBottom: '2rem' }}>
-        <thead>
-          <tr>
-            <th>Words</th>
-            <th>Best WPM</th>
-            <th>Best Accuracy</th>
-            <th>Attempts</th>
-          </tr>
-        </thead>
-        <tbody>
-          {WORD_COLS.map(n => {
-            const row = lang[`words_${n}`];
-            return (
-              <tr key={n}>
-                <td>{n}</td>
-                <td>{row ? row.best_wpm : <span style={{ color: 'var(--sub)' }}>—</span>}</td>
-                <td>{row ? `${row.best_accuracy}%` : <span style={{ color: 'var(--sub)' }}>—</span>}</td>
-                <td>{row ? row.attempts : <span style={{ color: 'var(--sub)' }}>—</span>}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      {/* Time table */}
-      <h3 style={{ color: 'var(--sub)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>
-        Time
-      </h3>
-      <table className="stats-table">
-        <thead>
-          <tr>
-            <th>Seconds</th>
-            <th>Best WPM</th>
-            <th>Best Accuracy</th>
-            <th>Attempts</th>
-          </tr>
-        </thead>
-        <tbody>
-          {TIME_COLS.map(t => {
-            const row = lang[`time_${t}`];
-            return (
-              <tr key={t}>
-                <td>{t}s</td>
-                <td>{row ? row.best_wpm : <span style={{ color: 'var(--sub)' }}>—</span>}</td>
-                <td>{row ? `${row.best_accuracy}%` : <span style={{ color: 'var(--sub)' }}>—</span>}</td>
-                <td>{row ? row.attempts : <span style={{ color: 'var(--sub)' }}>—</span>}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      {stats.total_tests === 0 && (
+      {stats.total_tests === 0 ? (
         <div className="stats-empty">Complete some tests to see your statistics here.</div>
+      ) : (
+        <>
+          {/* Language tabs */}
+          <div className="stats-lang-tabs">
+            {[['en', 'English'], ['ru', 'Russian']].map(([val, label]) => (
+              <button
+                key={val}
+                className={'layout-tab' + (langTab === val ? ' active' : '')}
+                onClick={() => setLangTab(val)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Per-word-count breakdown */}
+          <table className="stats-table">
+            <thead>
+              <tr>
+                <th>Words</th>
+                <th>Avg WPM</th>
+                <th>Avg Accuracy</th>
+                <th>Attempts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {WORD_COLS.map(n => {
+                const row = lang[`words_${n}`];
+                return (
+                  <tr key={n}>
+                    <td>{n}</td>
+                    <td>{row ? row.avg_wpm : dash}</td>
+                    <td>{row ? `${row.avg_accuracy}%` : dash}</td>
+                    <td>{row ? row.attempts : dash}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </>
       )}
     </div>
   );
