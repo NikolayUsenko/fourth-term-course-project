@@ -7,7 +7,9 @@
       "title": "Home Row — asdf",
       "key_combination": "asdf",
       "content": "asdf asdf fads sad dad add fad ads dads fads asdf sad add",
-      "order": 1
+      "order": 1,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -18,7 +20,9 @@
       "title": "Home Row — jkl",
       "key_combination": "jkl",
       "content": "jkl jkl ljk kjl jl kl lkj jlk klj jkl lk jk lj kjl jlk",
-      "order": 2
+      "order": 2,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -29,7 +33,9 @@
       "title": "Home Row — asdf jkl",
       "key_combination": "asdfjkl",
       "content": "asdf jkl fjdk slaj fj dk sl aj fdk sal jfd kla asdf jkl fj",
-      "order": 3
+      "order": 3,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -40,7 +46,9 @@
       "title": "Top Row — qwer",
       "key_combination": "qwer",
       "content": "qwer qwer rewq wer req qwe rqw ewq qer wqe qwer rewq wer qw",
-      "order": 4
+      "order": 4,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -51,7 +59,9 @@
       "title": "Top Row — uiop",
       "key_combination": "uiop",
       "content": "uiop uiop poiu iop uip oiu pou ipu oip upo pio uiop poiu io",
-      "order": 5
+      "order": 5,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -62,7 +72,9 @@
       "title": "Bottom Row — zxcv",
       "key_combination": "zxcv",
       "content": "zxcv zxcv vcxz xcv zxc vcx cvz xzc vzx czv zvc xcv zxcv cvx",
-      "order": 6
+      "order": 6,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -73,7 +85,9 @@
       "title": "Bottom Row — nm",
       "key_combination": "nm",
       "content": "nm nm mn nm mn nmn mnm nm nn mm nm mn nmm mmn nnn nm mn nm",
-      "order": 7
+      "order": 7,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -84,7 +98,9 @@
       "title": "Домашний ряд — фыва",
       "key_combination": "фыва",
       "content": "фыва фыва авыф выф фыв авы фав выа афы вфа фыва авыф фыв",
-      "order": 1
+      "order": 1,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -95,7 +111,9 @@
       "title": "Домашний ряд — олдж",
       "key_combination": "олдж",
       "content": "олдж олдж ждло олд жол лод длж лжо одж жло олдж ждло олд",
-      "order": 2
+      "order": 2,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -106,7 +124,9 @@
       "title": "Домашний ряд — фыва олдж",
       "key_combination": "фываолдж",
       "content": "фыва олдж фол ыд аж вол дж фыол давол фо ыл вд аж фыва олдж",
-      "order": 3
+      "order": 3,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -117,7 +137,9 @@
       "title": "Верхний ряд — йцук",
       "key_combination": "йцук",
       "content": "йцук йцук куцй цук йцу куй цйу йку цку йук куй цйу йцук цук",
-      "order": 4
+      "order": 4,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -128,7 +150,9 @@
       "title": "Верхний ряд — енгш",
       "key_combination": "енгш",
       "content": "енгш енгш шгне ген еш нг шег гше нше гне еш шг нег енгш шг",
-      "order": 5
+      "order": 5,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -139,7 +163,9 @@
       "title": "Нижний ряд — ячсм",
       "key_combination": "ячсм",
       "content": "ячсм ячсм мся яч сям ясч мяч счм яс мч сям яч ячсм мся яч",
-      "order": 6
+      "order": 6,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   }
 ]
