@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
@@ -6,17 +6,12 @@ import { useLessonTyping } from '../hooks/useLessonTyping';
 import LessonResultModal from '../components/LessonResultModal';
 import Keyboard from '../components/Keyboard';
 
-const fetchLesson = async (id) => {
-  const res = await api.get(`/lessons/${id}/`);
-  return res.data;
-};
+const fetchLesson = (id) => api.get(`/lessons/${id}/`).then(r => r.data);
+const fetchAllLessons = (lang) =>
+  api.get(`/lessons/?language=${lang}&ordering=order`).then(r => r.data.results ?? r.data);
 
-const fetchNextLesson = async (id, layout) => {
-  const res = await api.get(`/lessons/?layout=${layout}&ordering=order`);
-  const all = res.data.results ?? res.data;
-  const idx = all.findIndex(l => l.id === Number(id));
-  return idx >= 0 && idx + 1 < all.length ? all[idx + 1] : null;
-};
+/** Map lesson language to Keyboard component layout prop */
+const LANG_TO_LAYOUT = { en: 'qwerty', ru: 'jcuken' };
 
 export default function LessonPracticePage() {
   const { id } = useParams();
@@ -35,11 +30,19 @@ export default function LessonPracticePage() {
     handleKeyDown, restart, nextChar,
   } = useLessonTyping(lesson?.content || '');
 
-  const { data: nextLesson } = useQuery({
-    queryKey: ['next-lesson', id, lesson?.layout],
-    queryFn: () => fetchNextLesson(id, lesson.layout),
+  // Fetch full lesson list to find the next lesson (only when finished)
+  const { data: allLessons } = useQuery({
+    queryKey: ['lessons-all', lesson?.language],
+    queryFn: () => fetchAllLessons(lesson.language),
     enabled: !!lesson && status === 'finished',
+    staleTime: 1000 * 60 * 10,
   });
+
+  const nextLesson = useMemo(() => {
+    if (!allLessons || !lesson) return null;
+    const idx = allLessons.findIndex(l => l.id === Number(id));
+    return idx >= 0 && idx + 1 < allLessons.length ? allLessons[idx + 1] : null;
+  }, [allLessons, lesson, id]);
 
   const focusInput = useCallback(() => inputRef.current?.focus(), []);
 
@@ -47,6 +50,7 @@ export default function LessonPracticePage() {
     if (status !== 'finished') focusInput();
   }, [status, focusInput]);
 
+  // Word rendering
   const renderWord = (word, wIdx) => {
     if (wIdx < currentWordIdx) {
       const typed = typedHistory[wIdx] || '';
@@ -54,13 +58,20 @@ export default function LessonPracticePage() {
       return (
         <span key={wIdx} className={`word ${correct ? 'word--done-correct' : 'word--done-incorrect'}`}>
           {word.split('').map((c, ci) => {
-            let cls = 'char';
-            if (ci < typed.length) cls += typed[ci] === c ? ' char--correct' : ' char--incorrect';
-            return <span key={ci} className={cls}>{c}</span>;
+            const state = ci < typed.length
+              ? (typed[ci] === c ? ' char--correct' : ' char--incorrect')
+              : '';
+            return <span key={ci} className={`char${state}`}>{c}</span>;
           })}
+          {typed.length > word.length &&
+            typed.slice(word.length).split('').map((c, ci) => (
+              <span key={`x${ci}`} className="char char--incorrect char--extra">{c}</span>
+            ))
+          }
         </span>
       );
     }
+
     if (wIdx === currentWordIdx) {
       return (
         <span key={wIdx} className="word word--active">
@@ -72,12 +83,13 @@ export default function LessonPracticePage() {
           })}
           {currentInput.length > word.length &&
             currentInput.slice(word.length).split('').map((c, ci) => (
-              <span key={`e${ci}`} className="char char--incorrect char--extra">{c}</span>
+              <span key={`x${ci}`} className="char char--incorrect char--extra">{c}</span>
             ))
           }
         </span>
       );
     }
+
     return (
       <span key={wIdx} className="word">
         {word.split('').map((c, ci) => <span key={ci} className="char">{c}</span>)}
@@ -92,17 +104,20 @@ export default function LessonPracticePage() {
     <div className="page">
       {/* Header */}
       <div className="lesson-header">
-        <div
-          className="lesson-header__back"
+        <button
+          className="lesson-header__back btn btn--ghost btn--sm"
           onClick={() => navigate('/lessons')}
-          style={{ cursor: 'pointer' }}
         >
           ← Back to Lessons
-        </div>
+        </button>
         <div className="lesson-header__title">{lesson.title}</div>
-        {lesson.description && (
-          <div className="lesson-header__desc">{lesson.description}</div>
-        )}
+        <div className="lesson-header__meta">
+          <span className="lesson-header__lang">
+            {lesson.language === 'en' ? 'English' : 'Russian'}
+          </span>
+          {' · '}
+          <span className="lesson-header__combo">{lesson.key_combination}</span>
+        </div>
       </div>
 
       {/* Words area */}
@@ -113,6 +128,7 @@ export default function LessonPracticePage() {
           onKeyDown={handleKeyDown}
           readOnly
           tabIndex={-1}
+          aria-hidden="true"
         />
         <div className="words-container">
           {words.map((word, idx) => renderWord(word, idx))}
@@ -120,20 +136,21 @@ export default function LessonPracticePage() {
       </div>
 
       {status === 'idle' && (
-        <div className="test-hint">Click here and start typing · Tab — restart</div>
+        <p className="test-hint">Click and start typing · Tab — restart</p>
       )}
 
-      {/* Keyboard visual */}
+      {/* Keyboard visualisation */}
       <Keyboard
-        layout={lesson.layout}
-        highlightChar={status === 'running' ? (nextChar || '') : ''}
+        layout={LANG_TO_LAYOUT[lesson.language] || 'qwerty'}
+        highlightChar={status === 'running' ? nextChar : ''}
       />
 
       {/* Result modal */}
       {status === 'finished' && stats && (
         <LessonResultModal
           stats={stats}
-          layout={lesson.layout}
+          language={lesson.language}
+          keyCombo={lesson.key_combination}
           onRetry={restart}
           onNext={nextLesson ? () => navigate(`/lessons/${nextLesson.id}`) : null}
           onList={() => navigate('/lessons')}
