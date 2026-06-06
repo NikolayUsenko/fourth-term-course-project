@@ -1,72 +1,58 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTypingTest } from '../hooks/useTypingTest';
 import TestResultModal from '../components/TestResultModal';
 import api from '../services/api';
 
-const LANGUAGES = ['en', 'ru'];
+const LANGUAGES = [
+  { value: 'en', label: 'English' },
+  { value: 'ru', label: 'Russian' },
+];
 const WORD_COUNTS = [10, 25, 50, 100];
-const TIME_LIMITS = [15, 30, 60, 120];
 
 export default function TestPage() {
   const { user } = useAuth();
 
-  // Config state (persisted in sessionStorage for UX)
-  const [language, setLanguage] = React.useState('en');
-  const [testType, setTestType] = React.useState('words');
-  const [wordCount, setWordCount] = React.useState(25);
-  const [timeLimit, setTimeLimit] = React.useState(30);
-  const [savedStats, setSavedStats] = React.useState(null);
-  const [saveError, setSaveError] = React.useState('');
-
-  const config = { language, testType, wordCount, timeLimit };
+  const [language, setLanguage] = useState('en');
+  const [wordCount, setWordCount] = useState(25);
+  const [saveError, setSaveError] = useState('');
 
   const {
     words, currentWordIdx, currentInput, typedHistory,
-    status, timeLeft, stats,
+    status, stats,
     handleKeyDown, restart,
-  } = useTypingTest(config);
+  } = useTypingTest({ language, wordCount });
 
   const inputRef = useRef(null);
-  const containerRef = useRef(null);
-
-  // Focus invisible input when clicking the words area
   const focusInput = useCallback(() => inputRef.current?.focus(), []);
 
+  // Keep invisible input focused while test is active
   useEffect(() => {
-    if (status === 'running' || status === 'idle') focusInput();
+    if (status !== 'finished') focusInput();
   }, [status, focusInput]);
 
-  // Save result when finished
+  // Save result to backend when finished (authenticated only)
   useEffect(() => {
     if (status !== 'finished' || !stats || !user) return;
-    setSavedStats(null);
     setSaveError('');
 
-    const payload = {
+    api.post('/results/', {
       language,
-      test_type: testType,
-      word_count: testType === 'words' ? wordCount : null,
-      time_limit: testType === 'time' ? timeLimit : null,
+      word_count: wordCount,
       wpm: stats.wpm,
       cpm: stats.cpm,
       accuracy: stats.accuracy,
       typos: stats.typos,
       duration: stats.duration,
-    };
+    }).catch(() => setSaveError('Could not save result. Please try again.'));
+  }, [status, stats, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    api.post('/results/', payload)
-      .then(res => setSavedStats(res.data))
-      .catch(() => setSaveError('Could not save result.'));
-  }, [status, stats]);
+  const handleRestart = () => {
+    setSaveError('');
+    restart();
+  };
 
-  // Config change: restart immediately
-  const handleLanguage = v => { setLanguage(v); };
-  const handleTestType = v => { setTestType(v); };
-  const handleWordCount = v => { setWordCount(v); };
-  const handleTimeLimit = v => { setTimeLimit(v); };
-
-  // Render helpers
+  // Word / character rendering
   const renderChar = (char, idx, typedWord) => {
     let cls = 'char';
     if (idx < typedWord.length) {
@@ -78,38 +64,42 @@ export default function TestPage() {
   };
 
   const renderWord = (word, wIdx) => {
+    // Already submitted word
     if (wIdx < currentWordIdx) {
       const typed = typedHistory[wIdx] || '';
       const correct = typed === word;
       return (
         <span key={wIdx} className={`word ${correct ? 'word--done-correct' : 'word--done-incorrect'}`}>
           {word.split('').map((c, ci) => {
-            let cls = 'char';
-            if (ci < typed.length) cls += typed[ci] === c ? ' char--correct' : ' char--incorrect';
-            return <span key={ci} className={cls}>{c}</span>;
+            const state = ci < typed.length
+              ? (typed[ci] === c ? ' char--correct' : ' char--incorrect')
+              : '';
+            return <span key={ci} className={`char${state}`}>{c}</span>;
           })}
-          {typed.length > word.length && (
+          {typed.length > word.length &&
             typed.slice(word.length).split('').map((c, ci) => (
-              <span key={`e${ci}`} className="char char--incorrect char--extra">{c}</span>
+              <span key={`x${ci}`} className="char char--incorrect char--extra">{c}</span>
             ))
-          )}
+          }
         </span>
       );
     }
 
+    // Current word being typed
     if (wIdx === currentWordIdx) {
       return (
         <span key={wIdx} className="word word--active">
           {word.split('').map((c, ci) => renderChar(c, ci, currentInput))}
-          {currentInput.length > word.length && (
+          {currentInput.length > word.length &&
             currentInput.slice(word.length).split('').map((c, ci) => (
-              <span key={`e${ci}`} className="char char--incorrect char--extra">{c}</span>
+              <span key={`x${ci}`} className="char char--incorrect char--extra">{c}</span>
             ))
-          )}
+          }
         </span>
       );
     }
 
+    // Future word
     return (
       <span key={wIdx} className="word">
         {word.split('').map((c, ci) => <span key={ci} className="char">{c}</span>)}
@@ -117,116 +107,68 @@ export default function TestPage() {
     );
   };
 
-  // Live WPM (during test)
-  const liveWpm = React.useMemo(() => {
-    if (status !== 'running' || !words.length) return 0;
-    // Approximate: correct completed words × 60 / elapsed
-    return typedHistory.filter((t, i) => t === words[i]).length;
-  }, [status, typedHistory, words]);
-
   return (
     <div className="page">
       {/* Config bar */}
       <div className="test-config">
-        {/* Language */}
+        {/* Language selector */}
         <div className="mode-selector">
-          {LANGUAGES.map(lang => (
+          {LANGUAGES.map(({ value, label }) => (
             <button
-              key={lang}
-              className={'mode-btn' + (language === lang ? ' active' : '')}
-              onClick={() => { handleLanguage(lang); restart(); }}
+              key={value}
+              className={'mode-btn' + (language === value ? ' active' : '')}
+              onClick={() => { setLanguage(value); setSaveError(''); }}
             >
-              {lang.toUpperCase()}
+              {label}
             </button>
           ))}
         </div>
 
         <span className="mode-separator">|</span>
 
-        {/* Test type */}
+        {/* Word count selector */}
         <div className="mode-selector">
-          <button
-            className={'mode-btn' + (testType === 'words' ? ' active' : '')}
-            onClick={() => { handleTestType('words'); restart(); }}
-          >
-            words
-          </button>
-          <button
-            className={'mode-btn' + (testType === 'time' ? ' active' : '')}
-            onClick={() => { handleTestType('time'); restart(); }}
-          >
-            time
-          </button>
-        </div>
-
-        <span className="mode-separator">|</span>
-
-        {/* Word count / time options */}
-        <div className="mode-selector">
-          {testType === 'words'
-            ? WORD_COUNTS.map(n => (
-              <button
-                key={n}
-                className={'mode-btn' + (wordCount === n ? ' active' : '')}
-                onClick={() => { handleWordCount(n); restart(); }}
-              >{n}</button>
-            ))
-            : TIME_LIMITS.map(t => (
-              <button
-                key={t}
-                className={'mode-btn' + (timeLimit === t ? ' active' : '')}
-                onClick={() => { handleTimeLimit(t); restart(); }}
-              >{t}</button>
-            ))
-          }
+          {WORD_COUNTS.map(n => (
+            <button
+              key={n}
+              className={'mode-btn' + (wordCount === n ? ' active' : '')}
+              onClick={() => { setWordCount(n); setSaveError(''); }}
+            >
+              {n}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Timer (time mode) */}
-      {testType === 'time' && status === 'running' && (
-        <div className="timer-display">{timeLeft}</div>
-      )}
-
       {/* Words area */}
-      <div
-        className="words-wrapper"
-        ref={containerRef}
-        onClick={focusInput}
-      >
+      <div className="words-wrapper" onClick={focusInput}>
         <input
           ref={inputRef}
           className="hidden-input"
           onKeyDown={handleKeyDown}
           readOnly
           tabIndex={-1}
+          aria-hidden="true"
         />
-        <div className={`words-container${status === 'idle' ? '' : ''}`}>
+        <div className="words-container">
           {words.map((word, idx) => renderWord(word, idx))}
         </div>
       </div>
 
-      {/* Hint */}
       {status === 'idle' && (
-        <div className="test-hint">Click here and start typing · Tab — restart</div>
+        <p className="test-hint">Click and start typing · Tab — restart</p>
       )}
 
-      {saveError && <div className="error-message" style={{ marginTop: '1rem' }}>{saveError}</div>}
-      {user === null && status === 'finished' && (
-        <div className="test-hint" style={{ marginTop: '0.5rem' }}>
-          <span style={{ color: 'var(--sub)' }}>Log in to save your results.</span>
-        </div>
+      {saveError && (
+        <div className="error-message" style={{ marginTop: '1rem' }}>{saveError}</div>
       )}
 
       {/* Result modal */}
       {status === 'finished' && stats && (
         <TestResultModal
           stats={stats}
-          config={config}
-          onNewTest={() => {
-            // randomize new words (change nothing else)
-            restart();
-          }}
-          onRestart={restart}
+          config={{ language, wordCount }}
+          onRestart={handleRestart}
         />
       )}
     </div>
