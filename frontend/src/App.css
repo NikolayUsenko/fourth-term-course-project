@@ -188,11 +188,6 @@
   font-size: 1.5rem;
   line-height: 1.75;
   user-select: none;
-  transition: filter 0.2s;
-}
-
-.words-container.blurred {
-  filter: blur(4px);
 }
 
 .word {
@@ -226,6 +221,10 @@
   border-radius: 2px;
 }
 
+.char.char--extra {
+  color: var(--error);
+}
+
 .char.char--cursor::before {
   content: '';
   position: absolute;
@@ -244,10 +243,6 @@
   }
 }
 
-.char.char--extra {
-  color: var(--error);
-}
-
 .hidden-input {
   position: absolute;
   opacity: 0;
@@ -256,41 +251,6 @@
   height: 1px;
   top: 0;
   left: 0;
-}
-
-/* Live Stats */
-.live-stats {
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 1rem;
-  color: var(--sub);
-  font-size: 1rem;
-}
-
-.live-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.live-stat__value {
-  font-size: 1.6rem;
-  color: var(--caret);
-  font-weight: 600;
-}
-
-.live-stat__label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.timer-display {
-  font-size: 2.5rem;
-  color: var(--caret);
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 0.5rem;
 }
 
 .test-hint {
@@ -343,11 +303,18 @@
   letter-spacing: 2px;
 }
 
+/* Modal stats */
 .modal__stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+/* Строка 1: основные показатели — по центру */
+.modal__stats-primary {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
 .modal__stat {
@@ -355,6 +322,8 @@
   background: var(--bg);
   border-radius: var(--radius);
   padding: 0.75rem 0.5rem;
+  min-width: 100px;
+  flex: 0 1 130px;
 }
 
 .modal__stat-value {
@@ -371,9 +340,17 @@
   margin-top: 0.2rem;
 }
 
-.modal__stat--secondary .modal__stat-value {
-  font-size: 1.1rem;
-  color: var(--text);
+/* Строка 2: длительность — на всю ширину */
+.modal__stat--full {
+  text-align: center;
+  background: none;
+  border-radius: 0;
+  border-top: 1px solid var(--border);
+  padding: 0.9rem 0.5rem 0;
+}
+
+.modal__stat--full .modal__stat-value {
+  font-size: 1.4rem;
 }
 
 .modal__meta {
@@ -387,6 +364,37 @@
   display: flex;
   gap: 0.75rem;
   justify-content: center;
+}
+
+/* Modal — auth hint */
+.modal__auth-hint {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  color: var(--sub);
+  text-align: center;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.modal__auth-hint a {
+  color: var(--caret);
+  font-weight: 600;
+}
+
+.modal__auth-hint a:hover {
+  text-decoration: underline;
+}
+
+/* Modal — key combination */
+.modal__combo {
+  font-family: 'Roboto Mono', monospace;
+  color: var(--caret);
+  background: var(--bg);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  letter-spacing: 1px;
 }
 
 /* Notification */
@@ -550,10 +558,26 @@
   margin-bottom: 0.5rem;
 }
 
+.lesson-card__keys {
+  margin-top: 0.5rem;
+}
+
+.lesson-card__combo {
+  display: inline-block;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--caret);
+  background: var(--bg);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
 .lesson-card__desc {
   color: var(--sub);
   font-size: 0.8rem;
   line-height: 1.4;
+  margin-top: 0.5rem;
 }
 
 /* Lesson Practice Page */
@@ -562,16 +586,10 @@
 }
 
 .lesson-header__back {
-  color: var(--sub);
-  font-size: 0.85rem;
+  border: none;
+  background: none;
+  cursor: pointer;
   margin-bottom: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.lesson-header__back:hover {
-  color: var(--text);
 }
 
 .lesson-header__title {
@@ -580,9 +598,21 @@
   margin-bottom: 0.25rem;
 }
 
-.lesson-header__desc {
+.lesson-header__meta {
   color: var(--sub);
   font-size: 0.9rem;
+  margin-top: 0.3rem;
+}
+
+.lesson-header__lang {
+  color: var(--sub);
+}
+
+.lesson-header__combo {
+  font-family: 'Roboto Mono', monospace;
+  color: var(--caret);
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
 /* Keyboard Visual */
@@ -727,10 +757,6 @@
     font-size: 1.2rem;
   }
 
-  .modal__stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .keyboard {
     transform: scale(0.75);
     transform-origin: top center;
@@ -739,76 +765,4 @@
   .navbar__brand {
     font-size: 1.1rem;
   }
-}
-
-/* TestResultModal — auth hint */
-.modal__auth-hint {
-  background: var(--bg);
-  border-radius: var(--radius);
-  padding: 0.6rem 1rem;
-  font-size: 0.85rem;
-  color: var(--sub);
-  text-align: center;
-  margin-bottom: 1rem;
-  line-height: 1.6;
-}
-
-.modal__auth-hint a {
-  color: var(--caret);
-  font-weight: 600;
-}
-
-.modal__auth-hint a:hover {
-  text-decoration: underline;
-}
-
-/* LessonResultModal — key combination */
-.modal__combo {
-  font-family: 'Roboto Mono', monospace;
-  color: var(--caret);
-  background: var(--bg);
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-  letter-spacing: 1px;
-}
-
-/* LessonCard — key combination badge */
-.lesson-card__keys {
-  margin-top: 0.5rem;
-}
-
-.lesson-card__combo {
-  display: inline-block;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.85rem;
-  color: var(--caret);
-  background: var(--bg);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  letter-spacing: 1px;
-}
-
-/* LessonPracticePage header meta */
-.lesson-header__back {
-  border: none;
-  background: none;
-  cursor: pointer;
-  margin-bottom: 0.5rem;
-}
-
-.lesson-header__meta {
-  color: var(--sub);
-  font-size: 0.9rem;
-  margin-top: 0.3rem;
-}
-
-.lesson-header__lang {
-  color: var(--sub);
-}
-
-.lesson-header__combo {
-  font-family: 'Roboto Mono', monospace;
-  color: var(--caret);
-  font-weight: 600;
-  letter-spacing: 1px;
 }
