@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useAuth } from '../contexts/AuthContext';
 
-let notifId = 0;
+let _id = 0;
 
 export default function Notification() {
   const { user } = useAuth();
@@ -13,18 +13,16 @@ export default function Notification() {
   useWebSocket((msg) => {
     if (!user || msg.type !== 'new_record') return;
     const { data } = msg;
-    const label = data.test_type === 'words'
-      ? `${data.word_count} words`
-      : `${data.time_limit}s`;
+    const lang = data.language === 'en' ? 'English' : 'Russian';
 
-    const newNotif = {
-      id: ++notifId,
+    const notif = {
+      id: ++_id,
       title: '🏆 New Personal Record!',
-      body: `${data.language.toUpperCase()} · ${label} · ${data.wpm} WPM (was ${data.previous_best})`,
+      body: `${lang} · ${data.word_count} words · ${data.wpm} WPM  (prev. ${data.previous_best})`,
     };
 
-    setItems(prev => [...prev.slice(-3), newNotif]);
-    setTimeout(() => dismiss(newNotif.id), 5000);
+    setItems(prev => [...prev.slice(-3), notif]);
+    setTimeout(() => dismiss(notif.id), 5000);
   });
 
   if (!items.length) return null;
@@ -32,7 +30,7 @@ export default function Notification() {
   return (
     <div className="notifications-container">
       {items.map(n => (
-        <div key={n.id} className="notification" onClick={() => dismiss(n.id)}>
+        <div key={n.id} className="notification" onClick={() => dismiss(n.id)} role="alert">
           <div className="notification__title">{n.title}</div>
           <div className="notification__body">{n.body}</div>
         </div>
