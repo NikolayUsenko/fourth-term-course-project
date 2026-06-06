@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-/** Format seconds → HH:MM:SS */
 function fmt(totalSeconds) {
   const s = Math.floor(totalSeconds || 0);
   const h = Math.floor(s / 3600);
@@ -11,12 +10,6 @@ function fmt(totalSeconds) {
   return [h, m, sec].map(v => String(v).padStart(2, '0')).join(':');
 }
 
-/**
- * Stats popup shown after a typing test.
- * - Authenticated: result is already saved by TestPage; just shows stats.
- * - Unauthenticated: shows stats + prompt to register / sign in.
- * One button only: Restart.
- */
 export default function TestResultModal({ stats, config, onRestart }) {
   const { user } = useAuth();
   if (!stats) return null;
@@ -30,31 +23,31 @@ export default function TestResultModal({ stats, config, onRestart }) {
         <div className="modal__title">Test Complete</div>
 
         <div className="modal__stats">
-          <div className="modal__stat">
-            <div className="modal__stat-value">{stats.wpm}</div>
-            <div className="modal__stat-label">WPM</div>
+          {/* Строка 1: WPM, CPM, Accuracy — по центру */}
+          <div className="modal__stats-primary">
+            <div className="modal__stat">
+              <div className="modal__stat-value">{stats.wpm}</div>
+              <div className="modal__stat-label">WPM</div>
+            </div>
+            <div className="modal__stat">
+              <div className="modal__stat-value">{stats.cpm}</div>
+              <div className="modal__stat-label">CPM</div>
+            </div>
+            <div className="modal__stat">
+              <div className="modal__stat-value">{stats.accuracy}%</div>
+              <div className="modal__stat-label">Accuracy</div>
+            </div>
           </div>
-          <div className="modal__stat">
-            <div className="modal__stat-value">{stats.cpm}</div>
-            <div className="modal__stat-label">CPM</div>
-          </div>
-          <div className="modal__stat">
-            <div className="modal__stat-value">{stats.accuracy}%</div>
-            <div className="modal__stat-label">Accuracy</div>
-          </div>
-          <div className="modal__stat">
+
+          {/* Строка 2: Duration — на всю ширину */}
+          <div className="modal__stat modal__stat--full">
             <div className="modal__stat-value">{fmt(stats.duration)}</div>
             <div className="modal__stat-label">Duration</div>
-          </div>
-          <div className="modal__stat modal__stat--secondary">
-            <div className="modal__stat-value">{stats.typos}</div>
-            <div className="modal__stat-label">Typos</div>
           </div>
         </div>
 
         <div className="modal__meta">{testLabel}</div>
 
-        {/* Only shown to guests */}
         {!user && (
           <div className="modal__auth-hint">
             <Link to="/register">Register</Link> or{' '}
@@ -63,9 +56,7 @@ export default function TestResultModal({ stats, config, onRestart }) {
         )}
 
         <div className="modal__actions">
-          <button className="btn btn--primary" onClick={onRestart}>
-            ↺ Restart
-          </button>
+          <button className="btn btn--primary" onClick={onRestart}>↺ Restart</button>
         </div>
       </div>
     </div>
