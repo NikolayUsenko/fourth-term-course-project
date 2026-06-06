@@ -3,12 +3,10 @@
     "model": "core.lesson",
     "pk": 1,
     "fields": {
-      "layout": "qwerty",
-      "title": "Home Row — Left Hand",
-      "description": "Practice the home row keys for the left hand: A S D F",
-      "content": "asdf asdf fdsa fdsa asd fds adf sdf das fda",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
+      "language": "en",
+      "title": "Home Row — asdf",
+      "key_combination": "asdf",
+      "content": "asdf asdf fads sad dad add fad ads dads fads asdf sad add",
       "order": 1
     }
   },
@@ -16,12 +14,10 @@
     "model": "core.lesson",
     "pk": 2,
     "fields": {
-      "layout": "qwerty",
-      "title": "Home Row — Right Hand",
-      "description": "Practice the home row keys for the right hand: J K L ;",
-      "content": "jkl; jkl; ;lkj ;lkj jkl ;lk jl; klj ljk kj; jl;",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
+      "language": "en",
+      "title": "Home Row — jkl",
+      "key_combination": "jkl",
+      "content": "jkl jkl ljk kjl jl kl lkj jlk klj jkl lk jk lj kjl jlk",
       "order": 2
     }
   },
@@ -29,12 +25,10 @@
     "model": "core.lesson",
     "pk": 3,
     "fields": {
-      "layout": "qwerty",
-      "title": "Home Row — Both Hands",
-      "description": "Combine both hands on the home row",
-      "content": "asdfjkl; asdfjkl; fj dk sl a; fjdk slaj fjdk slaj fj",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
+      "language": "en",
+      "title": "Home Row — asdf jkl",
+      "key_combination": "asdfjkl",
+      "content": "asdf jkl fjdk slaj fj dk sl aj fdk sal jfd kla asdf jkl fj",
       "order": 3
     }
   },
@@ -42,12 +36,10 @@
     "model": "core.lesson",
     "pk": 4,
     "fields": {
-      "layout": "qwerty",
-      "title": "Top Row — Left Hand",
-      "description": "Practice Q W E R T",
-      "content": "qwert qwert trewq trewq qet rqw wrt ewq twr qwer",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
+      "language": "en",
+      "title": "Top Row — qwer",
+      "key_combination": "qwer",
+      "content": "qwer qwer rewq wer req qwe rqw ewq qer wqe qwer rewq wer qw",
       "order": 4
     }
   },
@@ -55,12 +47,10 @@
     "model": "core.lesson",
     "pk": 5,
     "fields": {
-      "layout": "qwerty",
-      "title": "Top Row — Right Hand",
-      "description": "Practice Y U I O P",
-      "content": "yuiop yuiop poiuy poiuy yup ioy upi opy yio pou",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
+      "language": "en",
+      "title": "Top Row — uiop",
+      "key_combination": "uiop",
+      "content": "uiop uiop poiu iop uip oiu pou ipu oip upo pio uiop poiu io",
       "order": 5
     }
   },
@@ -68,12 +58,10 @@
     "model": "core.lesson",
     "pk": 6,
     "fields": {
-      "layout": "qwerty",
-      "title": "Bottom Row",
-      "description": "Practice Z X C V B N M",
-      "content": "zxcvbnm mnbvcxz zxc vbn zcb xnm zvb cmn bvx znm",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
+      "language": "en",
+      "title": "Bottom Row — zxcv",
+      "key_combination": "zxcv",
+      "content": "zxcv zxcv vcxz xcv zxc vcx cvz xzc vzx czv zvc xcv zxcv cvx",
       "order": 6
     }
   },
@@ -81,52 +69,77 @@
     "model": "core.lesson",
     "pk": 7,
     "fields": {
-      "layout": "jcuken",
-      "title": "Домашняя строка — левая рука",
-      "description": "Тренировка домашней строки левой руки: Ф Ы В А",
-      "content": "фыва фыва авыф авыф фыв авы фав выа афы вфа",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
-      "order": 1
+      "language": "en",
+      "title": "Bottom Row — nm",
+      "key_combination": "nm",
+      "content": "nm nm mn nm mn nmn mnm nm nn mm nm mn nmm mmn nnn nm mn nm",
+      "order": 7
     }
   },
   {
     "model": "core.lesson",
     "pk": 8,
     "fields": {
-      "layout": "jcuken",
-      "title": "Домашняя строка — правая рука",
-      "description": "Тренировка домашней строки правой руки: О Л Д Ж",
-      "content": "олдж олдж ждло ждло олд ждл одж лжд длж жод",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
-      "order": 2
+      "language": "ru",
+      "title": "Домашний ряд — фыва",
+      "key_combination": "фыва",
+      "content": "фыва фыва авыф выф фыв авы фав выа афы вфа фыва авыф фыв",
+      "order": 1
     }
   },
   {
     "model": "core.lesson",
     "pk": 9,
     "fields": {
-      "layout": "jcuken",
-      "title": "Домашняя строка — обе руки",
-      "description": "Сочетание обеих рук на домашней строке",
-      "content": "фываолдж фываолдж фо ыл вд аж фол ыдж вао фыол",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
-      "order": 3
+      "language": "ru",
+      "title": "Домашний ряд — олдж",
+      "key_combination": "олдж",
+      "content": "олдж олдж ждло олд жол лод длж лжо одж жло олдж ждло олд",
+      "order": 2
     }
   },
   {
     "model": "core.lesson",
     "pk": 10,
     "fields": {
-      "layout": "jcuken",
-      "title": "Верхний ряд",
-      "description": "Тренировка: Й Ц У К Е Н Г Ш Щ",
-      "content": "йцуке нгшщ йцу кен гшщ йке цун гщ йцн кеш",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z",
+      "language": "ru",
+      "title": "Домашний ряд — фыва олдж",
+      "key_combination": "фываолдж",
+      "content": "фыва олдж фол ыд аж вол дж фыол давол фо ыл вд аж фыва олдж",
+      "order": 3
+    }
+  },
+  {
+    "model": "core.lesson",
+    "pk": 11,
+    "fields": {
+      "language": "ru",
+      "title": "Верхний ряд — йцук",
+      "key_combination": "йцук",
+      "content": "йцук йцук куцй цук йцу куй цйу йку цку йук куй цйу йцук цук",
       "order": 4
+    }
+  },
+  {
+    "model": "core.lesson",
+    "pk": 12,
+    "fields": {
+      "language": "ru",
+      "title": "Верхний ряд — енгш",
+      "key_combination": "енгш",
+      "content": "енгш енгш шгне ген еш нг шег гше нше гне еш шг нег енгш шг",
+      "order": 5
+    }
+  },
+  {
+    "model": "core.lesson",
+    "pk": 13,
+    "fields": {
+      "language": "ru",
+      "title": "Нижний ряд — ячсм",
+      "key_combination": "ячсм",
+      "content": "ячсм ячсм мся яч сям ясч мяч счм яс мч сям яч ячсм мся яч",
+      "order": 6
     }
   }
 ]
