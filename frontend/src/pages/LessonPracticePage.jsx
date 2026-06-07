@@ -27,7 +27,7 @@ export default function LessonPracticePage() {
   const {
     words, currentWordIdx, currentInput, typedHistory,
     status, stats,
-    handleKeyDown, restart, nextChar,
+    handleKeyDown, restart,
   } = useLessonTyping(lesson?.content || '');
 
   const { data: allLessons } = useQuery({
@@ -36,6 +36,14 @@ export default function LessonPracticePage() {
     enabled: !!lesson && status === 'finished',
     staleTime: 1000 * 60 * 10,
   });
+
+  const expectedNextChar = useMemo(() => {
+    if (status !== 'running') return '';
+    const currentWord = words[currentWordIdx] || '';
+    return currentInput.length < currentWord.length
+      ? currentWord[currentInput.length]
+      : ' ';
+  }, [status, words, currentWordIdx, currentInput]);
 
   const nextLesson = useMemo(() => {
     if (!allLessons || !lesson) return null;
@@ -176,7 +184,7 @@ export default function LessonPracticePage() {
       {/* Keyboard */}
       <Keyboard
         layout={LANG_TO_LAYOUT[lesson.language] || 'qwerty'}
-        highlightChar={status === 'running' ? nextChar : ''}
+        highlightChar={expectedNextChar}
       />
 
       {/* Result modal */}
