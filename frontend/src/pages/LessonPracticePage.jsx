@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
@@ -10,8 +10,8 @@ const fetchLesson = (id) => api.get(`/lessons/${id}/`).then(r => r.data);
 const fetchAllLessons = (lang) =>
   api.get(`/lessons/?language=${lang}&ordering=order`).then(r => r.data.results ?? r.data);
 
-/** Map lesson language to Keyboard component layout prop */
 const LANG_TO_LAYOUT = { en: 'qwerty', ru: 'jcuken' };
+const WRAPPER_H = 112; // matches .words-wrapper height in CSS
 
 export default function LessonPracticePage() {
   const { id } = useParams();
@@ -30,7 +30,6 @@ export default function LessonPracticePage() {
     handleKeyDown, restart, nextChar,
   } = useLessonTyping(lesson?.content || '');
 
-  // Fetch full lesson list to find the next lesson (only when finished)
   const { data: allLessons } = useQuery({
     queryKey: ['lessons-all', lesson?.language],
     queryFn: () => fetchAllLessons(lesson.language),
@@ -44,11 +43,39 @@ export default function LessonPracticePage() {
     return idx >= 0 && idx + 1 < allLessons.length ? allLessons[idx + 1] : null;
   }, [allLessons, lesson, id]);
 
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const containerRef = useRef(null);
+
   const focusInput = useCallback(() => inputRef.current?.focus(), []);
 
   useEffect(() => {
     if (status !== 'finished') focusInput();
   }, [status, focusInput]);
+
+  // Reset scroll when lesson changes or restarts
+  useEffect(() => {
+    setScrollOffset(0);
+  }, [id]);
+
+  useEffect(() => {
+    if (status === 'idle') setScrollOffset(0);
+  }, [status]);
+
+  // Scroll words container so the active word is always visible
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const active = containerRef.current.querySelector('.word--active');
+    if (!active) return;
+
+    const wordTop = active.offsetTop;
+    const wordBottom = wordTop + active.offsetHeight;
+
+    setScrollOffset(prev => {
+      if (wordBottom <= prev + WRAPPER_H) return prev;
+      const lineH = active.offsetHeight + 8;
+      return Math.max(0, wordTop - lineH);
+    });
+  }, [currentWordIdx]);
 
   // Word rendering
   const renderWord = (word, wIdx) => {
@@ -130,7 +157,14 @@ export default function LessonPracticePage() {
           tabIndex={-1}
           aria-hidden="true"
         />
-        <div className="words-container">
+        <div
+          className="words-container"
+          ref={containerRef}
+          style={{
+            transform: `translateY(-${scrollOffset}px)`,
+            transition: 'transform 0.25s ease',
+          }}
+        >
           {words.map((word, idx) => renderWord(word, idx))}
         </div>
       </div>
@@ -139,7 +173,7 @@ export default function LessonPracticePage() {
         <p className="test-hint">Click and start typing · Tab — restart</p>
       )}
 
-      {/* Keyboard visualisation */}
+      {/* Keyboard */}
       <Keyboard
         layout={LANG_TO_LAYOUT[lesson.language] || 'qwerty'}
         highlightChar={status === 'running' ? nextChar : ''}
@@ -151,7 +185,7 @@ export default function LessonPracticePage() {
           stats={stats}
           language={lesson.language}
           keyCombo={lesson.key_combination}
-          onRetry={restart}
+          onRetry={() => { setScrollOffset(0); restart(); }}
           onNext={nextLesson ? () => navigate(`/lessons/${nextLesson.id}`) : null}
           onList={() => navigate('/lessons')}
         />
