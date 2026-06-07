@@ -7,8 +7,8 @@
 }
 
 :root {
-  --bg: #323437;
-  --bg-sub: #2c2e31;
+  --bg: #1b1b1b;
+  --bg-sub: #292929;
   --text: #d1d0c5;
   --sub: #646669;
   --caret: #e2b714;
@@ -25,7 +25,7 @@
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'Roboto Mono', 'Courier New', Courier, monospace;
+  font-family: monospace;
   font-size: 16px;
   line-height: 1.6;
   min-height: 100vh;

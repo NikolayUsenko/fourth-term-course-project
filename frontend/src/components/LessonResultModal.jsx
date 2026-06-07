@@ -44,7 +44,7 @@ export default function LessonResultModal({ stats, language, keyCombo, onNext, o
         </div>
 
         <div className="modal__actions">
-          <button className="btn btn--ghost" onClick={onList}>All Lessons</button>
+          <button className="btn btn--secondary" onClick={onList}>All Lessons</button>
           <button className="btn btn--secondary" onClick={onRetry}>↺ Retry</button>
           {onNext && (
             <button className="btn btn--primary" onClick={onNext}>Next →</button>
