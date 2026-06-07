@@ -10,8 +10,8 @@ const LANGUAGES = [
   { value: 'ru', label: 'Russian' },
 ];
 const WORD_COUNTS = [10, 25, 50, 100];
-
 const LANG_TO_LAYOUT = { en: 'qwerty', ru: 'jcuken' };
+const WRAPPER_H = 112; // matches .words-wrapper height in CSS
 
 export default function TestPage() {
   const { user } = useAuth();
@@ -19,6 +19,7 @@ export default function TestPage() {
   const [language, setLanguage] = useState('en');
   const [wordCount, setWordCount] = useState(25);
   const [saveError, setSaveError] = useState('');
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   const {
     words, currentWordIdx, currentInput, typedHistory,
@@ -27,11 +28,36 @@ export default function TestPage() {
   } = useTypingTest({ language, wordCount });
 
   const inputRef = useRef(null);
+  const containerRef = useRef(null);
+
   const focusInput = useCallback(() => inputRef.current?.focus(), []);
 
+  // Keep invisible input focused while test is active
   useEffect(() => {
     if (status !== 'finished') focusInput();
   }, [status, focusInput]);
+
+  // Reset scroll when test resets to idle (config change or restart)
+  useEffect(() => {
+    if (status === 'idle') setScrollOffset(0);
+  }, [status]);
+
+  // Scroll words container so the active word is always visible
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const active = containerRef.current.querySelector('.word--active');
+    if (!active) return;
+
+    const wordTop = active.offsetTop;
+    const wordBottom = wordTop + active.offsetHeight;
+
+    setScrollOffset(prev => {
+      if (wordBottom <= prev + WRAPPER_H) return prev; // already visible
+      // Scroll up: keep one row of context above the active word
+      const lineH = active.offsetHeight + 8;
+      return Math.max(0, wordTop - lineH);
+    });
+  }, [currentWordIdx]);
 
   // Save result when finished (authenticated users only)
   useEffect(() => {
@@ -52,13 +78,16 @@ export default function TestPage() {
   const nextChar = useMemo(() => {
     if (status !== 'running') return '';
     const currentWord = words[currentWordIdx] || '';
-    // Highlight space when word is fully typed (waiting for space to submit)
     return currentInput.length < currentWord.length
       ? currentWord[currentInput.length]
       : ' ';
   }, [status, words, currentWordIdx, currentInput]);
 
-  const handleRestart = () => { setSaveError(''); restart(); };
+  const handleRestart = () => {
+    setSaveError('');
+    setScrollOffset(0);
+    restart();
+  };
 
   // Word / character rendering
   const renderChar = (char, idx, typedWord) => {
@@ -153,7 +182,14 @@ export default function TestPage() {
           tabIndex={-1}
           aria-hidden="true"
         />
-        <div className="words-container">
+        <div
+          className="words-container"
+          ref={containerRef}
+          style={{
+            transform: `translateY(-${scrollOffset}px)`,
+            transition: 'transform 0.25s ease',
+          }}
+        >
           {words.map((word, idx) => renderWord(word, idx))}
         </div>
       </div>
