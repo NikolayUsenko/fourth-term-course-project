@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'channels',
+    'drf_spectacular',
     'core.apps.CoreConfig',
     'users.apps.UsersConfig',
 ]
@@ -157,6 +158,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 
@@ -209,4 +211,19 @@ CHANNEL_LAYERS = {
         # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
         # 'CONFIG': {'hosts': [('127.0.0.1', 6379)]},
     },
+}
+
+# drf-spectacular настройки
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'KeyType API',
+    'DESCRIPTION': 'REST API онлайн-тренажёра клавиатурной печати.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'TAGS': [
+        {'name': 'auth',     'description': 'Аутентификация и профиль'},
+        {'name': 'lessons',  'description': 'Уроки'},
+        {'name': 'results',  'description': 'Результаты тестов'},
+        {'name': 'stats',    'description': 'Статистика'},
+    ],
 }
