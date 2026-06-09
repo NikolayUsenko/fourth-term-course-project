@@ -4,19 +4,23 @@ from rest_framework.response import Response
 from django.db.models import Avg, Sum, Max, Count
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from drf_spectacular.types import OpenApiTypes
 
 from .models import Lesson, TestResult
 from .serializers import LessonSerializer, TestResultSerializer, TestResultCreateSerializer
 from .permissions import IsAdminOrReadOnly
 
 
+@extend_schema(tags=['lessons'])
 class LessonViewSet(viewsets.ModelViewSet):
     """
-    Lessons CRUD.
-    GET  — public.
-    POST / PUT / PATCH / DELETE — admin only.
+    Уроки клавиатурного тренажёра.
 
-    Filter by language: /api/lessons/?language=en
+    - **GET** — публичный доступ (все пользователи).
+    - **POST / PUT / PATCH / DELETE** — только администраторы.
+
+    Фильтр по языку: `?language=en` или `?language=ru`.
     """
     serializer_class   = LessonSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -32,11 +36,15 @@ class LessonViewSet(viewsets.ModelViewSet):
         return qs
 
 
+@extend_schema(tags=['results'])
 class TestResultViewSet(viewsets.ModelViewSet):
     """
-    Test results — immutable after creation.
-    Authenticated users: create and read own results.
-    Admin: read all results.
+    Результаты тестов.
+
+    - **POST** — сохранить новый результат (только слова, 10/25/50/100).
+    - **GET** — история результатов текущего пользователя.
+
+    Результаты неизменяемы: PUT/PATCH/DELETE недоступны.
     """
     permission_classes  = [permissions.IsAuthenticated]
     http_method_names   = ['get', 'post', 'head', 'options']
@@ -59,7 +67,6 @@ class TestResultViewSet(viewsets.ModelViewSet):
         wc      = data['word_count']
         new_wpm = data['wpm']
 
-        # Personal record check
         existing_best = TestResult.objects.filter(
             user=user, language=lang, word_count=wc
         ).aggregate(best=Max('wpm'))['best']
@@ -67,13 +74,11 @@ class TestResultViewSet(viewsets.ModelViewSet):
         is_record = (existing_best is None) or (new_wpm > existing_best)
         result    = serializer.save(user=user, is_record=is_record)
 
-        # Send real-time notification only when a previous best is beaten
         if is_record and existing_best is not None:
             _send_record_notification(user, result, existing_best)
 
 
 def _send_record_notification(user, result, previous_best):
-    """Push a WPM record notification to the user's WebSocket channel group."""
     channel_layer = get_channel_layer()
     try:
         async_to_sync(channel_layer.group_send)(
@@ -89,27 +94,25 @@ def _send_record_notification(user, result, previous_best):
             },
         )
     except Exception:
-        pass   # Channel layer unavailable (tests, no daphne)
+        pass
 
 
-# Stats endpoints
-
+@extend_schema(
+    tags=['stats'],
+    summary='Статистика текущего пользователя',
+    description=(
+        'Возвращает агрегированную статистику: '
+        'общее количество тестов, суммарное время, средние WPM/CPM/точность, '
+        'а также разбивку по языкам (en/ru) и количеству слов (10/25/50/100).'
+    ),
+    responses={
+        200: OpenApiResponse(description='Агрегированная статистика пользователя'),
+        401: OpenApiResponse(description='Требуется аутентификация'),
+    },
+)
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def user_stats(request):
-    """
-    GET /api/stats/
-    Returns aggregated typing statistics for the authenticated user.
-
-    Response shape:
-    {
-        total_tests, total_time, avg_wpm, avg_cpm, avg_accuracy,
-        languages: {
-            en: { words_10: {avg_wpm, avg_accuracy, attempts} | null, ... },
-            ru: { ... }
-        }
-    }
-    """
     user    = request.user
     results = TestResult.objects.filter(user=user)
 
@@ -151,13 +154,18 @@ def user_stats(request):
     })
 
 
+@extend_schema(
+    tags=['stats'],
+    summary='Статистика всех пользователей (администратор)',
+    description='Список пользователей с их суммарной статистикой. Только для администраторов.',
+    responses={
+        200: OpenApiResponse(description='Список с агрегированной статистикой по каждому пользователю'),
+        403: OpenApiResponse(description='Доступ запрещён'),
+    },
+)
 @api_view(['GET'])
 @permission_classes([permissions.IsAdminUser])
 def admin_all_user_stats(request):
-    """
-    GET /api/admin/stats/
-    Admin overview of all users' statistics.
-    """
     from django.contrib.auth import get_user_model
     User = get_user_model()
 
