@@ -3,8 +3,6 @@
 Курсовой проект по дисциплине «Технология разработки программного обеспечения»  
 Траектория В: Django REST + React SPA + AJAX + JWT + WebSocket
 
-[Пояснительная записка](https://disk.yandex.ru/i/sla0QocHI6a75w)
-
 ---
 
 ## Содержание
@@ -22,6 +20,7 @@
 11. [Механика печати](#11-механика-печати)
 12. [Администрирование](#12-администрирование)
 13. [Тестирование](#13-тестирование)
+14. [Статистика разработки](#14-статистика-разработки)
 
 ---
 
@@ -102,8 +101,10 @@ course-project/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── Keyboard.jsx        # Визуализация клавиатуры
+│   │   │   ├── Keyboard.test.jsx
 │   │   │   ├── Navbar.jsx
 │   │   │   ├── Notification.jsx    # Real-time уведомления
+│   │   │   ├── Notification.test.jsx
 │   │   │   ├── ProtectedRoute.jsx
 │   │   │   ├── TestResultModal.jsx
 │   │   │   └── LessonResultModal.jsx
@@ -111,7 +112,9 @@ course-project/
 │   │   │   └── AuthContext.jsx     # JWT-аутентификация
 │   │   ├── hooks/
 │   │   │   ├── useTypingTest.js    # Логика теста
+│   │   │   ├── useTypingTest.test.js
 │   │   │   ├── useLessonTyping.js  # Логика урока
+│   │   │   ├── useLessonTyping.test.js
 │   │   │   └── useWebSocket.js     # WebSocket-подписка
 │   │   ├── pages/
 │   │   │   ├── TestPage.jsx
@@ -461,6 +464,20 @@ python manage.py test users
 cd frontend
 npm test
 ```
+
+## 14. Статистика разработки
+
+- **Всего коммитов:** 69
+- **Период разработки:** июнь 2026
+- **Средняя частота:** 6.3 коммитов/день
+
+### График активности
+
+![Активность коммитов](docs/pulse.png)
+
+### Тепловая карта
+
+![Распределение по времени](docs/commits.png)
 
 ---
 ---
